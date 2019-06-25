@@ -5,6 +5,10 @@
 [Bb]uilds/
 Assets/AssetStoreTools*
 
+# README & LICENSE
+README.md.meta
+LICENSE.meta
+
 # Visual Studio cache directory
 .vs/
 
