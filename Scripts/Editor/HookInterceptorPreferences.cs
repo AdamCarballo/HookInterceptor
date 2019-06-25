@@ -1,6 +1,6 @@
 ﻿/*
  * HookInterceptorPreferences.cs
- * Preferences holder and renderer for Unity's Preferences window
+ * Preferences holder and renderer for Unity's Preferences window.
  * 
  * by Adam Carballo under MIT license.
  * https://github.com/AdamCarballo/HookInterceptor
@@ -52,6 +52,14 @@ namespace F10.Hooks {
 				}
 				_secureKey = value;
 			}
+		}
+		
+		[SerializeField]
+		private bool _allowIntercepting = true;
+
+		public bool AllowIntercepting {
+			get { return _allowIntercepting; }
+			set { _allowIntercepting = value; }
 		}
 
 		[SerializeField]
@@ -107,15 +115,21 @@ namespace F10.Hooks {
 					var settings = HookInterceptorPreferences.GetSerializedPreferences();
 
 					settings.Update();
-					EditorGUILayout.PropertyField(settings.FindProperty("_allowFormatting"), new GUIContent("Allow Formatting \u24D8", "If disabled, url hooks won't be formatted and methods using attributes won't be called.\n\nOnly manually formatting will work, and Formatted() won't be called."));
+					EditorGUILayout.PropertyField(settings.FindProperty("_allowIntercepting"), new GUIContent("Allow Intercepting \u24D8", "If disabled, url hooks won't be intercepted using the default logic.\n\nOnly manually intercepting and formatting will work. Both InterceptedSecurely() and Formatted() won't be called."));
+					
+					GUI.enabled = settings.FindProperty("_allowIntercepting").boolValue;
+					EditorGUILayout.PropertyField(settings.FindProperty("_allowFormatting"), new GUIContent("Allow Formatting \u24D8", "If disabled, url hooks won't be formatted using the default logic and methods using attributes won't be called.\n\nOnly manually formatting will work, and Formatted() won't be called."));
 
 					EditorGUILayout.Space();
 
-					EditorGUILayout.PropertyField(settings.FindProperty("_exceptions"), new GUIContent("Parsing exceptions \u24D8", "Each string listed here will not be parsed, which means Formatted() won't be called. You must parse the exceptions manually yourself.\n\nSeparate each exception with a comma."));
 					EditorGUILayout.PropertyField(settings.FindProperty("_useSecureHooks"), new GUIContent("Use secure hooks \u24D8", "If enabled only url hooks with a secure key will be allowed and parsed."));
 
-					GUI.enabled = settings.FindProperty("_useSecureHooks").boolValue;
-					EditorGUILayout.PropertyField(settings.FindProperty("_secureKey"), new GUIContent("Secure key \u24D8", "Secure key that allowed url hooks must contain.\n\nAny length and characters are allowed, minus / and \\"));
+					GUI.enabled = settings.FindProperty("_useSecureHooks").boolValue && settings.FindProperty("_allowIntercepting").boolValue;
+					EditorGUILayout.PropertyField(settings.FindProperty("_secureKey"), new GUIContent("Secure key \u24D8", "Key that an allowed url hook must contain.\n\nAny length and characters are allowed, minus / and \\"));
+					
+					GUI.enabled = settings.FindProperty("_allowIntercepting").boolValue && settings.FindProperty("_allowFormatting").boolValue;
+					EditorGUILayout.PropertyField(settings.FindProperty("_exceptions"), new GUIContent("Parsing exceptions \u24D8", "Each string listed here will not be parsed, which means Formatted() won't be called. You must parse the exceptions manually yourself.\n\nSeparate each exception with a comma."));
+					
 					GUI.enabled = true;
 
 					EditorGUILayout.Space();

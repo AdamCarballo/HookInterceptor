@@ -118,6 +118,11 @@ namespace F10.Hooks {
 			// Subtract the payload from the url
 			var payload = url.Replace(_assembledUrl, string.Empty);
 			LogVerbose($"URL payload: {payload}");
+			
+			if (!_preferences.AllowIntercepting) {
+				LogDebug("Intercepting is disabled on settings");
+				return true;
+			}
 
 			Intercepted?.Invoke(payload);
 
@@ -136,6 +141,11 @@ namespace F10.Hooks {
 
 			InterceptedSecurely?.Invoke(string.Join("/", data.ToArray()));
 
+			if (!_preferences.AllowFormatting) {
+				LogDebug("Formatting is disabled on settings");
+				return;
+			}
+			
 			if (_preferences.Exceptions.Contains(data[0])) {
 				LogDebug("Payload is part of exceptions list. Stopping formatting...");
 				return;
@@ -172,11 +182,6 @@ namespace F10.Hooks {
 		}
 
 		private static void OnFormatted(List<string> data) {
-			if (!_preferences.AllowFormatting) {
-				LogVerbose("Formatting is disabled on settings");
-				return;
-			}
-			
 			var filteredMethods = HookAttributesParser.HookAttributes.ToArray();
 			object param = null;
 			for (int i = 0; i < data.Count; i++) {
@@ -193,11 +198,15 @@ namespace F10.Hooks {
 
 				var attributeType = filteredMethods[i].Value.Value.GetCustomAttribute(typeof(HookAttribute));
 				if (attributeType is HookField) {
+					if (param == null) return;
+					
 					var info = filteredMethods[i].Value.Value as FieldInfo;
 					var parsedParam = GetParsedParameter(info.FieldType, param);
 
 					info.SetValue(filteredMethods[i].Value.Key, parsedParam);
 				} else if (attributeType is HookProperty) {
+					if (param == null) return;
+
 					var info = filteredMethods[i].Value.Value as PropertyInfo;
 					var parsedParam = GetParsedParameter(info.PropertyType, param);
 
